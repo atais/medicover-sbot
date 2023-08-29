@@ -1,6 +1,6 @@
 package com.github.atais
 
-import HttpCommon.*
+import com.github.atais.HttpCommon.*
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Node

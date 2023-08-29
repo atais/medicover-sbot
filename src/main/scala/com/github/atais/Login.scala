@@ -1,7 +1,7 @@
 package com.github.atais
 
-import HttpCommon.*
-import Login.getClass
+import com.github.atais.HttpCommon.*
+import com.github.atais.Login.getClass
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Node
@@ -67,7 +67,7 @@ object Login {
     val res4 = ss.withSession(
       req
         .get(
-          uri"${oauthUrl}/external".addParams(
+          uri"$oauthUrl/external".addParams(
             Map(
               "provider"   -> "IS3",
               "signin"     -> signinId,

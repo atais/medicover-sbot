@@ -11,3 +11,6 @@ hs_err_pid*
 
 ### Mac OS ###
 .DS_Store
+
+# I don't want to expose them by mistake
+**/credentials.properties

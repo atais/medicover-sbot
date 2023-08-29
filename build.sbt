@@ -5,7 +5,6 @@ ThisBuild / scalaVersion := "3.3.0"
 lazy val root = (project in file("."))
   .settings(
     name             := "medicover-sbot",
-    idePackagePrefix := Some("com.github.atais"),
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "core"            % "3.9.0",
       "com.softwaremill.sttp.client3" %% "okhttp-backend"  % "3.9.0",
