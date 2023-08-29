@@ -1,22 +1,14 @@
-package com.github.atais
+package com.github.atais.medicover
 
-import com.github.atais.HttpCommon.*
-import com.github.atais.Login.getClass
-
+import com.github.atais.http.Session
+import com.github.atais.medicover.HttpCommon._
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Node
-import org.jsoup.select.NodeFilter
-import org.slf4j.{Logger, LoggerFactory}
-import sttp.client3.*
-import sttp.client3.logging.slf4j.Slf4jLoggingBackend
-import sttp.model.*
-import sttp.model.headers.CookieWithMeta
+import org.slf4j.LoggerFactory
+import sttp.client3._
+import sttp.model._
 
-import java.net.URLDecoder
 import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
-import scala.collection.mutable
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 object Login {
 
@@ -28,7 +20,7 @@ object Login {
     p.asScala.toMap
   }
 
-  def apply(): Unit = {
+  def apply(client: SimpleHttpClient): Unit = {
     val session = new Session(client)
 
     if (isLoggedIn(session)) {
@@ -61,7 +53,7 @@ object Login {
     log.info(signinId)
 
     log.info("Step #3")
-    val res3 = ss.withSession(req.get(uri"$oAuthReferer"))
+    val _ = ss.withSession(req.get(uri"$oAuthReferer"))
 
     log.info("Step #4")
     val res4 = ss.withSession(
@@ -92,8 +84,7 @@ object Login {
         .get(uri"$loginUrlWithParams")
     )
 
-    val loginForm = body2Form(res5b.body.toOption.get, "ReturnUrl", "__RequestVerificationToken")
-      ++ credentials
+    val loginForm = body2Form(res5b.body.toOption.get, "ReturnUrl", "__RequestVerificationToken") ++ credentials
     log.info(loginForm.mkString("\n"))
 
     log.info("Step #6")
@@ -118,7 +109,7 @@ object Login {
     val oauthForm = body2Form(res6b.body.toOption.get, "code", "id_token", "scope", "state", "session_state")
     log.info(oauthForm.mkString("\n"))
 
-    val res7 = ss.withSession(
+    val _ = ss.withSession(
       req
         .post(uri"$oauthUrl/signin-oidc")
         .header(HeaderNames.Referer, oAuthReferer)
@@ -128,7 +119,7 @@ object Login {
     val res7b = ss.withSession(
       req
         .get(uri"$oauthUrl/callback")
-        .header(HeaderNames.Referer, oAuthReferer, true)
+        .header(HeaderNames.Referer, oAuthReferer)
     )
     log.info(res7b.toString)
     val callback7 = res7b.header(HeaderNames.Location).get
@@ -137,7 +128,7 @@ object Login {
     val res7c = ss.withSession(
       req
         .get(uri"$callback7")
-        .header(HeaderNames.Referer, oAuthReferer, true)
+        .header(HeaderNames.Referer, oAuthReferer)
     )
     val oauthForm2 = body2Form(res7c.body.toOption.get, "code", "id_token", "scope", "state", "session_state")
 
@@ -149,9 +140,8 @@ object Login {
           Map(
             HeaderNames.Referer -> s"${oauthUrl.toString}/",
             "Origin"            -> s"${oauthUrl.toString}/",
-            "Content-Type" -> "application/x-www-form-urlencoded"
-          ),
-          true
+            "Content-Type"      -> "application/x-www-form-urlencoded"
+          )
         )
         .body(oauthForm2)
     )
@@ -164,8 +154,7 @@ object Login {
         .headers(
           Map(
             HeaderNames.Referer -> s"$molUrl/Medicover.OpenIdConnectAuthentication/Account/OAuthSignIn"
-          ),
-          true
+          )
         )
     )
 

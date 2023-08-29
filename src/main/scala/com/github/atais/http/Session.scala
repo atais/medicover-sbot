@@ -1,20 +1,9 @@
-package com.github.atais
+package com.github.atais.http
 
-import com.github.atais.HttpCommon.*
-
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Node
-import org.jsoup.select.NodeFilter
-import org.slf4j.{Logger, LoggerFactory}
-import sttp.client3.*
-import sttp.client3.logging.slf4j.Slf4jLoggingBackend
-import sttp.model.*
+import sttp.client3.{Request, Response, SimpleHttpClient}
 import sttp.model.headers.{CookieValueWithMeta, CookieWithMeta}
 
-import java.net.URLDecoder
 import java.util.concurrent.ConcurrentHashMap
-import scala.collection.mutable
-import scala.jdk.CollectionConverters.*
 
 object Session {
   private type Host    = String
@@ -22,7 +11,7 @@ object Session {
 }
 
 class Session(client: SimpleHttpClient) {
-  import Session.*
+  import com.github.atais.http.Session._
 
   private val cookieStore: Cookies = new ConcurrentHashMap()
 
@@ -31,16 +20,14 @@ class Session(client: SimpleHttpClient) {
     val hostCookies    = Option(cookieStore.get(host)).getOrElse(Seq.empty)
     val withCookies    = request.cookies(hostCookies)
     val response       = client.send(withCookies)
-    val updatedCookies = toMap(hostCookies) ++ toMap(response.unsafeCookies)
-    val withMeta       = updatedCookies.toSeq.map((CookieWithMeta.apply _).tupled)
+    val newCookies     = response.unsafeCookies.filter(_.value.nonEmpty) // this fixes "set-cookie: idsrv=;" - wtf is that
+    val updatedCookies = toMap(hostCookies) ++ toMap(newCookies)
+    val withMeta       = updatedCookies.toSeq.map { case (n, c) => CookieWithMeta(n, c) }
     cookieStore.put(host, withMeta)
     response
   }
 
   private def toMap(in: Seq[CookieWithMeta]): Map[String, CookieValueWithMeta] =
-    in
-      .filter(_.value.nonEmpty) // this fixes "set-cookie: idsrv=;" - wtf is that
-      .map { case CookieWithMeta(name, valueWithMeta) => (name, valueWithMeta) }
-      .toMap
+    in.map { case CookieWithMeta(name, valueWithMeta) => (name, valueWithMeta) }.toMap
 
 }

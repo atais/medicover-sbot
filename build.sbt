@@ -1,10 +1,10 @@
 ThisBuild / version := "0.1.0"
 
-ThisBuild / scalaVersion := "3.3.0"
+ThisBuild / scalaVersion := "2.13.11"
 
 lazy val root = (project in file("."))
   .settings(
-    name             := "medicover-sbot",
+    name := "medicover-sbot",
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "core"            % "3.9.0",
       "com.softwaremill.sttp.client3" %% "okhttp-backend"  % "3.9.0",
