@@ -2,11 +2,11 @@
 
 ## Usage
 
-Add `credentials.properties` file to resources with content:
+Add `credentials.conf` file to resources with content:
 
 ```properties
-UserName=<YOUR_MEDICOVER_ID>
-Password=<YOUR_MEDICOVER_PASS>
+user: <YOUR_MEDICOVER_ID>
+pass: <YOUR_MEDICOVER_PASS>
 ```
 
 Run from Main.

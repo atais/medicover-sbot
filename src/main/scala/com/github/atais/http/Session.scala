@@ -1,21 +1,14 @@
 package com.github.atais.http
 
+import com.github.atais.medicover.Credentials
 import sttp.client3.{Request, Response, SimpleHttpClient}
 import sttp.model.headers.{CookieValueWithMeta, CookieWithMeta}
 
-import java.util.concurrent.ConcurrentHashMap
+class Session(credentials: Credentials)(client: SimpleHttpClient) {
 
-object Session {
-  private type Host    = String
-  private type Cookies = ConcurrentHashMap[Host, Seq[CookieWithMeta]]
-}
+  private val cookieStore = new CookieStore(credentials.user)
 
-class Session(client: SimpleHttpClient) {
-  import com.github.atais.http.Session._
-
-  private val cookieStore: Cookies = new ConcurrentHashMap()
-
-  def withSession[T](request: Request[T, Any]): Response[T] = {
+  def send[T](request: Request[T, Any]): Response[T] = {
     val host           = request.uri.host.orNull
     val hostCookies    = Option(cookieStore.get(host)).getOrElse(Seq.empty)
     val withCookies    = request.cookies(hostCookies)
