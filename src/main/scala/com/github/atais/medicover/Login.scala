@@ -1,7 +1,6 @@
 package com.github.atais.medicover
 
-import com.github.atais.http.Session
-import com.github.atais.medicover.Static._
+import com.github.atais.medicover.http.Session
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import sttp.client3._

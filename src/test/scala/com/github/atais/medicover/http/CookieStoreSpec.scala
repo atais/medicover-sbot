@@ -1,4 +1,4 @@
-package com.github.atais.http
+package com.github.atais.medicover.http
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec

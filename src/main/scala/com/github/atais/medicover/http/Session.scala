@@ -1,4 +1,4 @@
-package com.github.atais.http
+package com.github.atais.medicover.http
 
 import com.github.atais.medicover.Credentials
 import sttp.client3.{Request, Response, SimpleHttpClient}

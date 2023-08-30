@@ -1,7 +1,6 @@
 package com.github.atais.medicover
 
-import com.github.atais.http.Session
-import com.github.atais.medicover.Static._
+import com.github.atais.medicover.http.Session
 import sttp.client3.UriContext
 
 object Api {

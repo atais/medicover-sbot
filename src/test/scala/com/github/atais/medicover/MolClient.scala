@@ -1,6 +1,6 @@
 package com.github.atais.medicover
 
-import com.github.atais.http.Session
+import com.github.atais.medicover.http.Session
 import sttp.client3._
 import sttp.client3.logging.slf4j.Slf4jLoggingBackend
 

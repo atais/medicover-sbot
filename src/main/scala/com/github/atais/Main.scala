@@ -1,6 +1,6 @@
 package com.github.atais
 
-import com.github.atais.http.Session
+import com.github.atais.medicover.http.Session
 import com.github.atais.medicover.{Credentials, Login}
 import org.slf4j.LoggerFactory
 import sttp.client3._

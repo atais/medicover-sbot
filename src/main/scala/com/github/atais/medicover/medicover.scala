@@ -1,9 +1,9 @@
-package com.github.atais.medicover
+package com.github.atais
 
 import sttp.client3._
 import sttp.model._
 
-object Static {
+package object medicover {
 
   val domain   = "medicover.pl"
   val molUrl   = uri"https://mol.$domain"

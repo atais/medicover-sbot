@@ -1,4 +1,4 @@
-package com.github.atais.http
+package com.github.atais.medicover.http
 
 import sttp.model.headers.CookieWithMeta
 
@@ -15,8 +15,7 @@ object CookieStore {
 }
 
 class CookieStore(filename: String) {
-
-  import com.github.atais.http.CookieStore._
+  import com.github.atais.medicover.http.CookieStore._
 
   private val file: File   = new File(cacheDir.toString, filename)
   private val mem: Cookies = loadFile()
