@@ -5,10 +5,10 @@ import sttp.model._
 
 package object medicover {
 
-  val domain   = "medicover.pl"
-  val molUrl   = uri"https://mol.$domain"
-  val loginUrl = uri"https://login.$domain"
-  val oauthUrl = uri"https://oauth.$domain"
+  private val domain: String = "medicover.pl"
+  val molUrl: Uri            = uri"https://mol.$domain"
+  val molHost: String        = molUrl.host.orNull
+  val oauthUrl: Uri          = uri"https://oauth.$domain"
 
   val mRequest: RequestT[Empty, Either[String, String], Any] = basicRequest
     .followRedirects(false)

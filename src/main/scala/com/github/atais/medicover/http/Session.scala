@@ -1,6 +1,6 @@
 package com.github.atais.medicover.http
 
-import com.github.atais.medicover.{Credentials, molUrl}
+import com.github.atais.medicover._
 import sttp.client3.{Request, Response, SimpleHttpClient}
 import sttp.model.StatusCode
 import sttp.model.headers.{CookieValueWithMeta, CookieWithMeta}
@@ -19,9 +19,9 @@ class Session(credentials: Credentials, client: SimpleHttpClient, cookieStore: C
     if (response.code == StatusCode.Unauthorized) {
       val inMemoryCookieStore = new MemoryCookieStore
       val inMemorySession     = new Session(credentials, client, inMemoryCookieStore)
-      OauthLogin(credentials, inMemorySession)
-      val sessionCookies = inMemoryCookieStore.get(molUrl.host.orNull)
-      cookieStore.put(molUrl.host.orNull, sessionCookies): Unit
+      OauthLogin(credentials)(inMemorySession)
+      val sessionCookies = inMemoryCookieStore.get(molHost)
+      cookieStore.put(molHost, sessionCookies): Unit
       send(request)
     } else {
       val newCookies     = response.unsafeCookies.filter(_.value.nonEmpty) // this fixes "set-cookie: idsrv=;" - wtf is that

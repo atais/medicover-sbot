@@ -2,141 +2,65 @@ package com.github.atais.medicover.http
 
 import com.github.atais.medicover._
 import org.jsoup.Jsoup
-import org.slf4j.LoggerFactory
 import sttp.client3._
 import sttp.model._
 
+/**
+ * Heavily inspired on
+ * https://github.com/apqlzm/medihunter/blob/master/medicover_session.py
+ */
 object OauthLogin {
 
-  private val log = LoggerFactory.getLogger(getClass)
   private val req = mRequest
 
-  private[http] def apply(credentials: Credentials, s: Session): Unit = {
-    log.info("Step #1")
-    val res1 = s.send(req.get(uri"$molUrl/Users/Account/LogOn?ReturnUrl=/"))
-    val red1 = res1.header(HeaderNames.Location).get
-    log.info(red1)
+  private[http] def apply(credentials: Credentials)(implicit s: Session): Unit = {
+    // get authentication form
+    val res1        = s.send(req.get(uri"$molUrl/Users/Account/LogOn?ReturnUrl=/"))
+    val res2        = follow(follow(res1))
+    val doc         = Jsoup.parse(res2.body.toOption.get)
+    val metaContent = doc.select("meta[http-equiv=refresh]").attr("content")
+    val metaUrl     = metaContent.replace("0; url = ", "")
+    val res4        = s.send(req.get(uri"$metaUrl"))
+    val res5        = follow(res4)
 
-    log.info("Step #2")
-    val res2         = s.send(req.get(uri"$red1"))
-    val oAuthReferer = res2.header(HeaderNames.Location).get
-    val signinId     = oAuthReferer.split('=').last
-
-    log.info(oAuthReferer)
-    log.info(signinId)
-
-    log.info("Step #3")
-    val _ = s.send(req.get(uri"$oAuthReferer"))
-
-    log.info("Step #4")
-    val res4 = s.send(
-      req
-        .get(
-          uri"$oauthUrl/external".addParams(
-            Map(
-              "provider"   -> "IS3",
-              "signin"     -> signinId,
-              "owner"      -> "Mcov_Mol",
-              "ui_locales" -> "pl-PL"
-            )
-          )
-        )
-    )
-    val red4 = res4.header(HeaderNames.Location).get
-
-    log.info("Step #5")
-    val res5 = s.send(
-      req
-        .get(uri"$red4")
-    )
+    // fill authentication
     val loginUrlWithParams = res5.header(HeaderNames.Location).get
+    val loginForm          = body2Form(follow(res5), "ReturnUrl", "__RequestVerificationToken") ++ credentials.asMap
+    val res6               = s.send(req.post(uri"$loginUrlWithParams").body(loginForm))
 
-    log.info("Step #5b")
-    val res5b = s.send(
-      req
-        .get(uri"$loginUrlWithParams")
-    )
+    // oauth form
+    val oauthForm = body2Form(follow(res6), "code", "id_token", "scope", "state", "session_state")
+    val _         = s.send(req.post(uri"$oauthUrl/signin-oidc").body(oauthForm))
+    val res7b     = s.send(req.get(uri"$oauthUrl/callback"))
 
-    val loginForm = body2Form(res5b.body.toOption.get, "ReturnUrl", "__RequestVerificationToken") ++ credentials.asMap
+    // openid form
+    val openIdForm = body2Form(follow(res7b), "code", "id_token", "scope", "state", "session_state")
+    val openIdUrl  = "Medicover.OpenIdConnectAuthentication/Account/OAuthSignIn"
+    val _          = s.send(req.post(uri"$molUrl/$openIdUrl").body(openIdForm))
 
-    log.info("Step #6")
-    val res6 = s.send(
-      req
-        .post(uri"$loginUrlWithParams")
-        .header(HeaderNames.Referer, oAuthReferer)
-        .contentType("application/x-www-form-urlencoded")
-        .body(loginForm)
-    )
-
-    val callback6    = res6.header(HeaderNames.Location).get
-    val callback6Url = loginUrl.toString + callback6
-    log.info(callback6Url)
-    val res6b = s.send(
-      req
-        .get(uri"$callback6Url")
-        .header(HeaderNames.Referer, oAuthReferer)
-    )
-
-    val oauthForm = body2Form(res6b.body.toOption.get, "code", "id_token", "scope", "state", "session_state")
-
-    val _ = s.send(
-      req
-        .post(uri"$oauthUrl/signin-oidc")
-        .header(HeaderNames.Referer, oAuthReferer)
-        .body(oauthForm)
-    )
-
-    val res7b = s.send(
-      req
-        .get(uri"$oauthUrl/callback")
-        .header(HeaderNames.Referer, oAuthReferer)
-    )
-    log.info(res7b.toString)
-    val callback7 = res7b.header(HeaderNames.Location).get
-
-    log.info("Step #7c")
-    val res7c = s.send(
-      req
-        .get(uri"$callback7")
-        .header(HeaderNames.Referer, oAuthReferer)
-    )
-    val oauthForm2 = body2Form(res7c.body.toOption.get, "code", "id_token", "scope", "state", "session_state")
-
-    log.info("Step #8")
-    val _ = s.send(
-      req
-        .post(uri"$molUrl/Medicover.OpenIdConnectAuthentication/Account/OAuthSignIn")
-        .headers(
-          Map(
-            HeaderNames.Referer -> s"${oauthUrl.toString}/",
-            "Origin"            -> s"${oauthUrl.toString}/",
-            "Content-Type"      -> "application/x-www-form-urlencoded"
-          )
-        )
-        .body(oauthForm2)
-    )
-
-    log.info("Step #9")
-    val res9 = s.send(
-      req
-        .get(molUrl)
-        .headers(
-          Map(
-            HeaderNames.Referer -> s"$molUrl/Medicover.OpenIdConnectAuthentication/Account/OAuthSignIn"
-          )
-        )
-    )
-
-    val callback9    = res9.header(HeaderNames.Location).get
-    val callback9Url = molUrl.toString + callback9
-    log.info("Step #10")
-    val _ = s.send(
-      req
-        .get(uri"$callback9Url")
-    )
+    // enter and save cookies
+    val res9 = s.send(req.get(molUrl))
+    val _    = follow(res9)
   }
 
-  private def body2Form(body: String, params: String*): Map[String, String] = {
+  private def follow[I](in: Response[I])(implicit s: Session): Response[Either[String, String]] = {
+    val location = uri"${in.header(HeaderNames.Location).get}"
+    val uri = if (location.host.isDefined) {
+      location
+    } else {
+      Uri(
+        scheme = in.request.uri.scheme,
+        authority = in.request.uri.authority,
+        pathSegments = location.pathSegments,
+        querySegments = location.querySegments,
+        fragmentSegment = location.fragmentSegment
+      )
+    }
+    s.send(mRequest.get(uri))
+  }
+
+  private def body2Form(r: Response[Either[String, String]], params: String*): Map[String, String] = {
+    val body     = r.body.toOption.get
     val document = Jsoup.parse(body)
     params.map { param =>
       val value = document.select(s"input[name=$param]").first().attr("value")
