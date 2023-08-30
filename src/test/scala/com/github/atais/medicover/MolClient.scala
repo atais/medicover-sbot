@@ -9,6 +9,6 @@ trait MolClient {
   private val backend: SttpBackend[Identity, Any] = Slf4jLoggingBackend(HttpClientSyncBackend())
   private val client: SimpleHttpClient            = SimpleHttpClient(backend)
   protected val credentials: Credentials          = Credentials.fromProperties()
-  implicit val session: Session                   = new Session(credentials)(client)
+  implicit val session: Session                   = new Session(credentials, client)
 
 }

@@ -1,32 +1,17 @@
-package com.github.atais.medicover
+package com.github.atais.medicover.http
 
-import com.github.atais.medicover.http.Session
+import com.github.atais.medicover._
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import sttp.client3._
 import sttp.model._
 
-object Login {
+object OauthLogin {
 
   private val log = LoggerFactory.getLogger(getClass)
   private val req = mRequest
 
-  def apply(credentials: Credentials)(implicit session: Session): Boolean =
-    if (isLoggedIn) {
-      true
-    } else {
-      log.info("No valid session")
-      login(credentials)
-      true
-    }
-
-  private def isLoggedIn(implicit s: Session): Boolean = {
-    log.info("Check if previous session is still valid")
-    val res = s.send(mRequest.get(molUrl))
-    res.code == StatusCode.Ok
-  }
-
-  private def login(credentials: Credentials)(implicit s: Session): Unit = {
+  private[http] def apply(credentials: Credentials, s: Session): Unit = {
     log.info("Step #1")
     val res1 = s.send(req.get(uri"$molUrl/Users/Account/LogOn?ReturnUrl=/"))
     val red1 = res1.header(HeaderNames.Location).get

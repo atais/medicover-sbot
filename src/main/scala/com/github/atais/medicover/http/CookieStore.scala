@@ -1,34 +1,48 @@
 package com.github.atais.medicover.http
 
+import com.github.atais.medicover.http.CookieStore._
 import sttp.model.headers.CookieWithMeta
 
 import java.io._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.ConcurrentHashMap
 
 object CookieStore {
-  private val cacheDir = Paths.get(".cache")
+  val cacheDir: Path = Paths.get(".cache")
   Files.createDirectories(cacheDir)
 
-  private type Host    = String
-  private type Cookies = ConcurrentHashMap[Host, Seq[CookieWithMeta]]
+  type Host    = String
+  type Cookies = ConcurrentHashMap[Host, Seq[CookieWithMeta]]
 }
 
-class CookieStore(filename: String) {
-  import com.github.atais.medicover.http.CookieStore._
+trait CookieStore {
+  def get(in: Host): Seq[CookieWithMeta]
+  def put(host: String, withMeta: Seq[CookieWithMeta]): Seq[CookieWithMeta]
+}
 
-  private val file: File   = new File(cacheDir.toString, filename)
-  private val mem: Cookies = loadFile()
+private[http] class MemoryCookieStore extends CookieStore {
+  protected val mem: Cookies = new ConcurrentHashMap()
 
   def get(in: Host): Seq[CookieWithMeta] =
     Option(mem.get(in)).getOrElse(Seq.empty)
 
-  def put(host: String, withMeta: Seq[CookieWithMeta]): Unit = {
+  def put(host: String, withMeta: Seq[CookieWithMeta]): Seq[CookieWithMeta] =
     mem.put(host, withMeta)
-    syncFile()
+}
+
+private[http] class PersistentCookieStore(filename: String) extends MemoryCookieStore {
+
+  private val file: File = new File(cacheDir.toString, filename)
+
+  override protected val mem: Cookies = loadFromFile()
+
+  override def put(host: String, withMeta: Seq[CookieWithMeta]): Seq[CookieWithMeta] = {
+    val r = super.put(host, withMeta)
+    saveToFile()
+    r
   }
 
-  private def syncFile(): Unit = {
+  private def saveToFile(): Unit = {
     val stream = new FileOutputStream(file, false)
     val oos    = new ObjectOutputStream(stream)
     oos.writeObject(mem)
@@ -36,7 +50,7 @@ class CookieStore(filename: String) {
     stream.close()
   }
 
-  private def loadFile(): Cookies =
+  private def loadFromFile(): Cookies =
     if (file.exists()) {
       val ois   = new ObjectInputStream(new FileInputStream(file))
       val value = ois.readObject
