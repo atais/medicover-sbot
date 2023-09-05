@@ -2,15 +2,41 @@ import org.typelevel.scalacoptions.ScalacOptions
 
 ThisBuild / version      := "0.1.0"
 ThisBuild / scalaVersion := "2.13.11"
-Test / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement
+ThisBuild / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+ThisBuild / scalacOptions += "-Ymacro-annotations"
 
-// https://github.com/sbt/sbt/issues/2824
-Test / fork := true
+val common: Seq[Def.Setting[?]] = Seq(
+  // https://github.com/sbt/sbt/issues/2824
+  Test / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement,
+  Compile / tpolecatExcludeOptions += ScalacOptions.lintInferAny
+)
 
-lazy val root = (project in file("."))
-  .settings(scalacLocally)
+val scalacLocally: Seq[Def.Setting[?]] = {
+  // disable Scala compiler errors locally, checking on some GitLabCI env
+  if (!sys.env.contains("CI")) {
+    Seq(scalacOptions -= "-Xfatal-warnings")
+  } else {
+    Seq()
+  }
+}
+
+lazy val cli = (project in file("cli"))
   .settings(
-    name := "medicover-sbot",
+    libraryDependencies ++= Seq(
+      "dev.zio"      %% "zio"               % "2.0.16",
+      "dev.zio"      %% "zio-macros"        % "2.0.16",
+      "com.beachape" %% "enumeratum"        % "1.7.3",
+      "dev.zio"      %% "zio-test"          % "2.0.16" % Test,
+      "dev.zio"      %% "zio-test-sbt"      % "2.0.16" % Test,
+      "dev.zio"      %% "zio-test-magnolia" % "2.0.16" % Test
+      //      "org.typelevel" %% "cats-core" % "2.10.0",
+    )
+  )
+  .settings(common)
+  .settings(scalacLocally)
+
+lazy val medicover = (project in file("medicover"))
+  .settings(
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3"         %% "core"                  % "3.9.0",
       "com.softwaremill.sttp.client3"         %% "okhttp-backend"        % "3.9.0",
@@ -21,14 +47,22 @@ lazy val root = (project in file("."))
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.23.3",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.23.3" % Provided,
       "org.scalatest"                         %% "scalatest"             % "3.2.16" % Test
-    )
+    ),
+    Test / fork := true
   )
+  .settings(common)
+  .settings(scalacLocally)
 
-val scalacLocally: Seq[Def.Setting[?]] = {
-  // disable Scala compiler errors locally, checking on some GitLabCI env
-  if (!sys.env.contains("CI")) {
-    Seq(scalacOptions --= Seq("-Xfatal-warnings", "-Ywarn-unused", "-Ywarn-unused-import"))
-  } else {
-    Seq()
-  }
-}
+lazy val bot = (project in file("bot"))
+  .dependsOn(medicover)
+  .dependsOn(cli % "compile->compile;test->test")
+  .settings(common)
+  .settings(scalacLocally)
+
+lazy val root = (project in file("."))
+  .settings(
+    name := "medicover-sbot"
+  )
+  .settings(common)
+  .settings(scalacLocally)
+  .aggregate(medicover, cli, bot)

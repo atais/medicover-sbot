@@ -13,6 +13,10 @@ Run from Main.
 
 All features are pending.
 
+## Development
+
+If using IntelliJ, remember about ZIO for IntelliJ plugin.
+
 ## Inspiration
 
 - https://github.com/apqlzm/medihunter
