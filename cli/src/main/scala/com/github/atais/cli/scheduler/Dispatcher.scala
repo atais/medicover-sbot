@@ -1,4 +1,4 @@
-package com.github.atais.scheduler
+package com.github.atais.cli.scheduler
 
 import zio._
 

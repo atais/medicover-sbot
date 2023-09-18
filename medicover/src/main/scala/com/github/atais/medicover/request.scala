@@ -26,4 +26,23 @@ object request {
 
   implicit val VisitParamsCodec: JsonValueCodec[VisitParams] = JsonCodecMaker.make
 
+  case class FilterParams(
+    regionIds: Seq[Long],
+    serviceTypeId: Long,
+    serviceIds: Seq[Long],
+    clinicIds: Seq[Long],
+    selectedSpecialties: Seq[Long]
+  )
+
+  implicit def params[T <: Product](in: T): Seq[(String, String)] =
+    in.productElementNames
+      .zip(in.productIterator)
+      .flatMap {
+        case (key, value: Seq[_]) =>
+          value.map(v => (key, v.toString))
+        case (key, value) =>
+          Seq((key, value.toString))
+      }
+      .toSeq
+
 }

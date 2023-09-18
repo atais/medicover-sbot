@@ -8,7 +8,8 @@ ThisBuild / scalacOptions += "-Ymacro-annotations"
 val common: Seq[Def.Setting[?]] = Seq(
   // https://github.com/sbt/sbt/issues/2824
   Test / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement,
-  Compile / tpolecatExcludeOptions += ScalacOptions.lintInferAny
+  Compile / tpolecatExcludeOptions += ScalacOptions.lintInferAny,
+  Test / fork := true
 )
 
 val scalacLocally: Seq[Def.Setting[?]] = {
@@ -23,17 +24,18 @@ val scalacLocally: Seq[Def.Setting[?]] = {
 lazy val cli = (project in file("cli"))
   .settings(
     libraryDependencies ++= Seq(
-      "dev.zio"      %% "zio"               % "2.0.16",
-      "dev.zio"      %% "zio-macros"        % "2.0.16",
-      "com.beachape" %% "enumeratum"        % "1.7.3",
-      "dev.zio"      %% "zio-test"          % "2.0.16" % Test,
-      "dev.zio"      %% "zio-test-sbt"      % "2.0.16" % Test,
-      "dev.zio"      %% "zio-test-magnolia" % "2.0.16" % Test
-      //      "org.typelevel" %% "cats-core" % "2.10.0",
+      "dev.zio"       %% "zio"               % "2.0.16",
+      "dev.zio"       %% "zio-macros"        % "2.0.16",
+      "com.beachape"  %% "enumeratum"        % "1.7.3",
+      "org.typelevel" %% "kittens"           % "3.0.0",
+      "dev.zio"       %% "zio-test"          % "2.0.16" % Test,
+      "dev.zio"       %% "zio-test-sbt"      % "2.0.16" % Test,
+      "dev.zio"       %% "zio-test-magnolia" % "2.0.16" % Test
     )
   )
   .settings(common)
   .settings(scalacLocally)
+  .dependsOn(medicover)
 
 lazy val medicover = (project in file("medicover"))
   .settings(
@@ -47,15 +49,8 @@ lazy val medicover = (project in file("medicover"))
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"   % "2.23.3",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.23.3" % Provided,
       "org.scalatest"                         %% "scalatest"             % "3.2.16" % Test
-    ),
-    Test / fork := true
+    )
   )
-  .settings(common)
-  .settings(scalacLocally)
-
-lazy val bot = (project in file("bot"))
-  .dependsOn(medicover)
-  .dependsOn(cli % "compile->compile;test->test")
   .settings(common)
   .settings(scalacLocally)
 
@@ -65,4 +60,4 @@ lazy val root = (project in file("."))
   )
   .settings(common)
   .settings(scalacLocally)
-  .aggregate(medicover, cli, bot)
+  .aggregate(medicover, cli)

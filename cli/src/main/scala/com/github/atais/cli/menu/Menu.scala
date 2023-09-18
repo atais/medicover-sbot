@@ -1,4 +1,4 @@
-package com.github.atais.cli
+package com.github.atais.cli.menu
 
 import enumeratum._
 

@@ -12,7 +12,7 @@ class Session(credentials: Credentials, client: SimpleHttpClient, cookieStore: C
 
   def send[T](request: Request[T, Any]): Response[T] = {
     val host        = request.uri.host.orNull
-    val hostCookies = Option(cookieStore.get(host)).getOrElse(Seq.empty)
+    val hostCookies = cookieStore.get(host).getOrElse(Seq.empty)
     val withCookies = request.cookies(hostCookies)
     val response    = client.send(withCookies)
 
@@ -20,7 +20,7 @@ class Session(credentials: Credentials, client: SimpleHttpClient, cookieStore: C
       val inMemoryCookieStore = new MemoryCookieStore
       val inMemorySession     = new Session(credentials, client, inMemoryCookieStore)
       OauthLogin(credentials)(inMemorySession)
-      val sessionCookies = inMemoryCookieStore.get(molHost)
+      val sessionCookies = inMemoryCookieStore.get(molHost).get
       cookieStore.put(molHost, sessionCookies): Unit
       send(request)
     } else {

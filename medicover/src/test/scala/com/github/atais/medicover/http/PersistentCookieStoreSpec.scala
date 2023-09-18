@@ -20,14 +20,14 @@ class PersistentCookieStoreSpec extends AnyFlatSpec with Matchers with BeforeAnd
     val cookieStore = new PersistentCookieStore(fakename)
 
     cookieStore.put(host, Seq(CookieWithMeta(name, cookie1)))
-    cookieStore.get(host) shouldBe Seq(CookieWithMeta(name, cookie1))
+    cookieStore.get(host).get shouldBe Seq(CookieWithMeta(name, cookie1))
     cookieStore.put(host, Seq(CookieWithMeta(name, cookie2)))
-    cookieStore.get(host) shouldBe Seq(CookieWithMeta(name, cookie2))
+    cookieStore.get(host).get shouldBe Seq(CookieWithMeta(name, cookie2))
   }
 
   it should "restore session from file" in {
     val cookieStore = new PersistentCookieStore(fakename)
-    cookieStore.get(host) shouldBe Seq(CookieWithMeta(name, cookie2))
+    cookieStore.get(host).get shouldBe Seq(CookieWithMeta(name, cookie2))
   }
 
   override protected def afterAll(): Unit = {

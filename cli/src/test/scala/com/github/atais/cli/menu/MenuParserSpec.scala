@@ -1,8 +1,8 @@
-package com.github.atais.cli
+package com.github.atais.cli.menu
 
-import com.github.atais.cli.MenuParserSpecUtils.{invalidCommandsGen, parse}
-import zio.{Scope, ZIO}
+import com.github.atais.cli.menu.MenuParserSpecUtils.{invalidCommandsGen, parse}
 import zio.test._
+import zio.{Scope, ZIO}
 
 object MenuParserSpec extends ZIOSpecDefault {
 

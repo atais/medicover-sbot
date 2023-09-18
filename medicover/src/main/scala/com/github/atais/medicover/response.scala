@@ -39,7 +39,15 @@ object response {
     adHocYN: Boolean
   )
 
+  case class DictData(
+    services: Seq[TextId],
+    clinics: Seq[TextId],
+    doctors: Seq[TextId],
+    doctorLanguages: Seq[TextId]
+  )
+
   implicit val RegionsCodec: JsonValueCodec[Regions]                 = JsonCodecMaker.make
   implicit val AvailableVisitsCodec: JsonValueCodec[AvailableVisits] = JsonCodecMaker.make
+  implicit val FilterDataCodec: JsonValueCodec[DictData]             = JsonCodecMaker.make
 
 }

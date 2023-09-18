@@ -1,6 +1,6 @@
-package com.github.atais.cli
+package com.github.atais.cli.menu
 
-import com.github.atais.cli.Menu.Invalid
+import com.github.atais.cli.menu.Menu.Invalid
 import zio._
 import zio.macros.accessible
 

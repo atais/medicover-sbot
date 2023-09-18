@@ -26,7 +26,7 @@ object ApiSpec {
     clinicIds = Seq.empty,
     doctorLanguagesIds = Seq.empty,
     doctorIds = Seq.empty,
-    searchSince = LocalDateTime.of(2023, 8, 30, 22, 59, 25, 200000000),
+    searchSince = LocalDateTime.now(),
     startTime = LocalTime.MIDNIGHT,
     endTime = LocalTime.MIDNIGHT.minusMinutes(1),
     selectedSpecialties = Seq(176),
