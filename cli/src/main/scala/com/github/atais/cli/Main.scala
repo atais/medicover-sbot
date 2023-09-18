@@ -2,7 +2,7 @@ package com.github.atais.cli
 
 import cats.implicits.toShow
 import com.github.atais.cli.bot.PrettyPrint._
-import com.github.atais.cli.menu.MenuParser
+import com.github.atais.cli.options._
 import com.github.atais.medicover.http.Session
 import com.github.atais.medicover.request._
 import com.github.atais.medicover.{Api, Credentials}
@@ -46,7 +46,7 @@ object Main extends ZIOAppDefault {
   )
   val cliApp =
     for {
-      _ <- MenuParser.parse("key")
+      _ <- printLine("welcome")
       r  = Api.getAvailableVisits(sampleVisit)
       r <- ZIO.fromEither(r)
       _ <- printLine(r.show)
@@ -55,7 +55,18 @@ object Main extends ZIOAppDefault {
 //      _  <- printLine(r2)
     } yield r
 
+  val program = {
+    def loop(state: State): ZIO[RunLoop, Nothing, Unit] =
+      RunLoop
+        .step(state)
+        .foldZIO(
+          _ => ZIO.unit,
+          nextState => loop(nextState)
+        )
+    loop(Menu)
+  }
+
   override def run =
-    cliApp
-      .provideLayer(MenuParser.live)
+    program
+      .provideLayer(RunLoop.live)
 }
