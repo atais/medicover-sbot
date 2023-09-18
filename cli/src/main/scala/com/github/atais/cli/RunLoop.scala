@@ -17,8 +17,9 @@ object RunLoop {
 trait RunLoopLive extends RunLoop {
   override def step(state: State): ZIO[Any, Any, State] =
     for {
-      _         <- printLine(state.render)
-      input     <- if (state == Exit) ZIO.succeed("") else readLine
+      out       <- state.render
+      _         <- printLine(out)
+      input     <- if (state.isInstanceOf[Exit]) ZIO.succeed("") else readLine
       nextState <- state.process(input, state)
     } yield nextState
 }

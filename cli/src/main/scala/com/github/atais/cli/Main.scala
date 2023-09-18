@@ -63,7 +63,7 @@ object Main extends ZIOAppDefault {
           _ => ZIO.unit,
           nextState => loop(nextState)
         )
-    loop(Menu)
+    loop(Menu())
   }
 
   override def run =
